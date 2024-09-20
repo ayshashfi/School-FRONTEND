@@ -4,6 +4,7 @@ import { toast, Toaster } from "sonner";
 import flatpickr from "flatpickr";
 import { useDispatch, useSelector } from "react-redux";
 import { studentListByClass } from "../axios/admin/AdminServers";
+import { classByTeacher } from "../axios/teacher.js/teacherServers";
 
 const ViewAttendance = () => {
   const [classrooms, setClassrooms] = useState([]);
@@ -14,22 +15,24 @@ const ViewAttendance = () => {
   const datepickerRef = useRef(null);
   const dispatch = useDispatch();
   const student_list = useSelector((state) => state.student.student_list);
-  const presentCount = Object.values(attendance).filter(
-    (isPresent) => isPresent
-  ).length;
+  const presentCount = Object.values(attendance).filter(isPresent => isPresent).length;
   const absentCount = students.length - presentCount;
 
   useEffect(() => {
-    axiosInstance
-      .get("classroom/")
-      .then((response) => setClassrooms(response.data))
-      .catch((error) => console.error("Error fetching classrooms:", error));
-  }, []);
+    const fetchClassroom = async () => {
+      const response = await dispatch(classByTeacher());
+      if (response.payload) {
+        setClassrooms(response.payload.data); // Ensure data structure is correct
+      }
+    };
+    fetchClassroom();
+  }, [dispatch]);
 
   useEffect(() => {
     flatpickr(datepickerRef.current, {
       mode: "single",
       dateFormat: "Y-m-d",
+      maxDate: "today",
       onChange: (selectedDates, dateStr) => {
         setSelectedDate(dateStr);
       },
@@ -49,15 +52,13 @@ const ViewAttendance = () => {
       return;
     }
 
-    dispatch(
-      studentListByClass({
-        class_no: selectedClassroom.class_no,
-        section: selectedClassroom.section,
-      })
-    );
+    dispatch(studentListByClass({
+      class_no: selectedClassroom.classroom.class_no,
+      section: selectedClassroom.classroom.section,
+    }));
 
     axiosAttendanceInstance
-      .get(`view_attendance/${selectedClassroom.id}/${selectedDate}/`)
+      .get(`view_attendance/${selectedClassroom.classroom.id}/${selectedDate}/`)
       .then((response) => {
         if (response.data.length === 0) {
           toast.warning("No Data found");
@@ -74,8 +75,10 @@ const ViewAttendance = () => {
 
   const handleClassChange = (e) => {
     const classId = e.target.value;
-    const classroom = classrooms?.find((c) => c.id === parseInt(classId));
+    const classroom = classrooms?.find((c) => c.classroom.id === parseInt(classId));
     setSelectedClassroom(classroom);
+    console.log(classroom.classroom);
+    
   };
 
   const handleSubmit = (e) => {
@@ -92,10 +95,7 @@ const ViewAttendance = () => {
     }));
 
     axiosAttendanceInstance
-      .put(
-        `view_attendance/${selectedClassroom.id}/${selectedDate}/`,
-        attendanceData
-      )
+      .put(`view_attendance/${selectedClassroom.id}/${selectedDate}/`, attendanceData)
       .then(() => {
         toast.success("Attendance updated successfully");
         setStudents([]);
@@ -113,21 +113,9 @@ const ViewAttendance = () => {
 
   return (
     <div className="p-4">
-      {/* <svg
-            className="fill-current"
-            width="20"
-            height="18"
-            viewBox="0 0 20 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M19 8.175H2.98748L9.36248 1.6875C9.69998 1.35 9.69998 0.825 9.36248 0.4875C9.02498 0.15 8.49998 0.15 8.16248 0.4875L0.399976 8.3625C0.0624756 8.7 0.0624756 9.225 0.399976 9.5625L8.16248 17.4375C8.31248 17.5875 8.53748 17.7 8.76248 17.7C8.98748 17.7 9.17498 17.625 9.36248 17.475C9.69998 17.1375 9.69998 16.6125 9.36248 16.275L3.02498 9.8625H19C19.45 9.8625 19.825 9.4875 19.825 9.0375C19.825 8.55 19.45 8.175 19 8.175Z"
-              fill=""
-            />
-          </svg> */}
       <h1 className="text-3xl text-gray-900 pb-4 font-bold">View Attendance</h1>
       <Toaster position="top-center" richColors />
+
       {students.length === 0 ? (
         <>
           <div className="flex space-x-4 mb-4">
@@ -137,14 +125,14 @@ const ViewAttendance = () => {
               </label>
               <select
                 onChange={handleClassChange}
-                value={selectedClassroom ? selectedClassroom.id : ""}
+                value={selectedClassroom ? selectedClassroom.classroom.id : ""}
                 className="block w-full bg-gray-200 border border-gray-200 text-gray-700 py-2 px-3 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 required
               >
                 <option value="">Select a classroom</option>
                 {classrooms.map((classroom) => (
-                  <option key={classroom.id} value={classroom.id}>
-                    {classroom.class_no} {classroom.section}
+                  <option key={classroom.classroom.id} value={classroom.classroom.id}>
+                    {classroom.classroom.class_no} {classroom.classroom.section}
                   </option>
                 ))}
               </select>
@@ -179,7 +167,7 @@ const ViewAttendance = () => {
               </div>
               <div>Date: {selectedDate}</div>
             </div>
-            <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5  dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+            <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
               <div className="flex justify-between items-center mb-4 font-bold">
                 <div>
                   <span className="font-medium">Total Students: </span>
@@ -228,7 +216,7 @@ const ViewAttendance = () => {
                         <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                           <input
                             type="checkbox"
-                            checked={attendance[student.student]}
+                            checked={attendance[student.student] || false}
                             onChange={(e) =>
                               setAttendance({
                                 ...attendance,
@@ -246,9 +234,9 @@ const ViewAttendance = () => {
               </table>
             </div>
           </div>
-          {/* {console.log(isPastDate(selectedDate))} */}
           {!isPastDate(selectedDate) && (
             <button
+
               type="submit"
               className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 mt-4"
             >

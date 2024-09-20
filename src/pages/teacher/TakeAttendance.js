@@ -25,7 +25,7 @@ const AttendanceForm = () => {
       }
     };
     fetchClassroom();
-  }, []);
+  });
 
   useEffect(() => {
     flatpickr(datepickerRef.current, {
@@ -82,7 +82,7 @@ const AttendanceForm = () => {
   return (
     <div className="p-4">
       <div className="flex">
-        {!students.length == 0 && (
+        {!students.length === 0 && (
           <button
             onClick={() => setStudents([])}
             className="px-2 mx-6 mb-4 border border-current rounded-full"

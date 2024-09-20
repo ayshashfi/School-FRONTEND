@@ -112,19 +112,19 @@ function StudentProfile() {
             <h5 className="mb-1.5 text-2xl font-semibold text-black dark:text-white">
               Class : {studentDetails.class_room.class_no} {studentDetails.class_room.section}
             </h5>
-            {/* <p className="font-medium">{studentDetails.phone_number}</p> */}
-            {/* <p className="font-medium">{studentDetails.email}</p> */}
+            <p className="font-medium">{studentDetails.phone_number}</p> 
+             <p className="font-medium">{studentDetails.email}</p>
           </div>
           
           <div className="m-3">
-            {/* <h4 className="text-xl font-semibold">Student Details</h4> */}
+             {/* <h4 className="text-xl font-semibold">Student Details</h4>  */}
             <p><strong>Roll No:</strong> {studentDetails.roll_no}</p>
             <p><strong>Admission Date:</strong> {studentDetails.admission_date}</p>
             {/* <p><strong>Classroom:</strong> {studentDetails.class_room}</p> */}
-            {/* <p><strong>Parent Contact:</strong> {studentDetails.parent_contact}</p> */}
+             {/* <p><strong>Parent Contact:</strong> {studentDetails.parent_contact}</p>  */}
             {/* <p><strong>Username:</strong> {studentDetails.username}</p> */}
-            {/* <p><strong>Address:</strong> {studentDetails.address}</p> */}
-            {/* <p><strong>Date of Birth:</strong> {studentDetails.date_of_birth || "N/A"}</p> */}
+             {/* <p><strong>Address:</strong> {studentDetails.address}</p>  */}
+            {/* <p><strong>Date of Birth:</strong> {studentDetails.date_of_birth || "N/A"}</p>  */}
           </div>
       <button
         className="m-4 bg-primary hover:bg-opacity-90 text-white font-semibold py-2 px-8 rounded-md"

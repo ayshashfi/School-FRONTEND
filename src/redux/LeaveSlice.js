@@ -7,7 +7,8 @@ export const fetchLeaveApplications = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosLeaveInstance.get('/leave-applications/');
-      return response.data; // Make sure this includes student details
+      console.log("Fetched Leave Applications:", response.data); // Log the data here
+      return response.data; // Ensure this includes student details
     } catch (error) {
       return rejectWithValue(error.response ? error.response.data : 'Something went wrong while fetching leaves');
     }
@@ -44,6 +45,7 @@ const leaveSlice = createSlice({
   name: 'leave',
   initialState: {
     leaves: [],
+    totalCount: 0, // Added totalCount to state
     fetchStatus: 'idle',
     createStatus: 'idle',
     updateStatus: 'idle',
@@ -55,11 +57,12 @@ const leaveSlice = createSlice({
       // Fetch leave applications
       .addCase(fetchLeaveApplications.pending, (state) => {
         state.fetchStatus = 'loading';
-        state.error = null;  // Clear error on new request
+        state.error = null; // Clear error on new request
       })
       .addCase(fetchLeaveApplications.fulfilled, (state, action) => {
         state.fetchStatus = 'succeeded';
         state.leaves = action.payload; // Expecting student details here
+        state.totalCount = action.payload.length; // Set totalCount based on fetched data
       })
       .addCase(fetchLeaveApplications.rejected, (state, action) => {
         state.fetchStatus = 'failed';
@@ -69,11 +72,12 @@ const leaveSlice = createSlice({
       // Create a leave application
       .addCase(createLeaveApplication.pending, (state) => {
         state.createStatus = 'loading';
-        state.error = null;  // Clear error on new request
+        state.error = null; // Clear error on new request
       })
       .addCase(createLeaveApplication.fulfilled, (state, action) => {
         state.createStatus = 'succeeded';
         state.leaves.push(action.payload);
+        state.totalCount += 1; // Increment totalCount when a leave is created
       })
       .addCase(createLeaveApplication.rejected, (state, action) => {
         state.createStatus = 'failed';
@@ -83,7 +87,7 @@ const leaveSlice = createSlice({
       // Update leave application status
       .addCase(updateLeaveStatus.pending, (state) => {
         state.updateStatus = 'loading';
-        state.error = null;  // Clear error on new request
+        state.error = null; // Clear error on new request
       })
       .addCase(updateLeaveStatus.fulfilled, (state, action) => {
         state.updateStatus = 'succeeded';

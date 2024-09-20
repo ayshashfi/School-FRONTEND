@@ -37,6 +37,8 @@ import StudentTeacher from "./pages/student/StudentTeacher";
 import StudentLeavePage from "./pages/student/StudentLeavePage";
 import LeaveManagementPage from "./pages/admin/AdminLeavePage";
 import TeacherLeavePage from "./pages/admin/TeacherLeavePage";
+import LeaveHistoryPage from "./pages/student/LeaveHistoryPage";
+
 
 export default function App() {
   return (
@@ -74,6 +76,7 @@ export default function App() {
           <Route path="/student-result" element={<Result />} />
           <Route path="/teachers" element={<StudentTeacher />} />
           <Route path="/apply-leave" element={<StudentLeavePage />} /> {/* New route for applying leave */}
+          <Route path="/leave-history" element={<LeaveHistoryPage />} />
         </Route>
 
         {/* Chat */}

@@ -2,23 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLeaveApplications, createLeaveApplication } from '../../redux/LeaveSlice';
 import { Toaster, toast } from 'sonner';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const StudentLeavePage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize useNavigate
   const leaves = useSelector((state) => state.leave.leaves);
   const leaveStatus = useSelector((state) => state.leave.status);
-  const user = useSelector((state) => state.auth.user); // Access the user object from auth state
+  const user = useSelector((state) => state.auth.user);
 
   const [formData, setFormData] = useState({
     start_date: '',
     end_date: '',
     reason: '',
-    student: user ? user.id : '', // Ensure student ID is set to the user's ID
+    student: user ? user.id : '',
   });
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchLeaveApplications(user.id)); // Use user.id
+      dispatch(fetchLeaveApplications({ userId: user.id }));
     } else {
       console.error('User information is missing');
     }
@@ -45,7 +47,7 @@ const StudentLeavePage = () => {
 
       <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md mb-12 border border-gray-200">
-          <div className="mb-6">
+        <div className="mb-6">
             <label htmlFor="start_date" className="block text-lg font-semibold text-gray-800 mb-2">Start Date</label>
             <input
               type="date"
@@ -78,7 +80,6 @@ const StudentLeavePage = () => {
               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
           </div>
-          <input type="hidden" name="student" value={formData.student} /> {/* Ensure student ID is included */}
           <button
             type="submit"
             className="w-full py-3 mt-4 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150"
@@ -87,25 +88,17 @@ const StudentLeavePage = () => {
           </button>
         </form>
 
-        <h2 className="text-3xl font-bold text-center mb-6 text-blue-900">Your Leave Applications</h2>
-        {leaveStatus === 'loading' ? (
-          <p className="text-lg text-gray-600 text-center">Loading...</p>
-        ) : (
-          leaves.length > 0 ? (
-            <div className="space-y-6">
-              {leaves.map((leave) => (
-                <div key={leave.id} className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-                  <p className="text-lg font-medium text-gray-800"><strong>From:</strong> {leave.start_date}</p>
-                  <p className="text-lg font-medium text-gray-800"><strong>To:</strong> {leave.end_date}</p>
-                  <p className="text-lg font-medium text-gray-800"><strong>Reason:</strong> {leave.reason}</p>
-                  <p className={`text-lg font-medium ${leave.status === 'APPROVED' ? 'text-green-600' : 'text-red-600'}`}><strong>Status:</strong> {leave.status}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-lg text-gray-600 text-center">No leave applications found.</p>
-          )
-        )}
+        
+        {/* Navigate to Leave History */}
+        <div className="flex justify-center mt-6">
+          <button 
+            onClick={() => navigate('/leave-history')} // Use navigate to go to Leave History
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            View Leave History
+          </button>
+        </div>
+
         <Toaster />
       </div>
     </div>
