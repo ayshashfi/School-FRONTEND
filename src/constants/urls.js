@@ -9,4 +9,4 @@ export const CHAT = `https://kidsschool.life/chat/`;
 
 export const LEAVE = `https://kidsschool.life/leave/`; 
 
-export const SOCKET = 'wss://kidsschool.life/ws';
+export const SOCKET = 'ws://kidsschool.life/ws';
