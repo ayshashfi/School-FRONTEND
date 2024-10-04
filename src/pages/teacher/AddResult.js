@@ -9,6 +9,7 @@ import {
 } from "../../axios/admin/AdminServers";
 import {
   addResult,
+  classByTeacher,
   syllabusByClass,
 } from "../../axios/teacher.js/teacherServers";
 import { fetchSyllabus } from "../../redux/SyllabusSlice";
@@ -25,7 +26,7 @@ function AddResult() {
     exam_type: "",
   });
 
-  const { classrooms } = useSelector((state) => state.classroom);
+  const [classrooms, setClassrooms] = useState([]);
   const { exam_type_list } = useSelector((state) => state.examType);
   const { student_list } = useSelector((state) => state.student);
   const [students, setStudents] = useState([]);
@@ -35,14 +36,12 @@ function AddResult() {
 
   const handleClassChange = async (e) => {
     const classId = parseInt(e.target.value);
-    const classroom = classrooms.find((c) => c.id === classId);
+    const classroom = classrooms.find((c) => c.classroom.id === classId);
     setSelectedClassroom(classroom);
 
-    // Fetch syllabuss by classroom
+    // Fetch syllabus by classroom
     const syllabusResponses = await dispatch(syllabusByClass(classId));
-    console.log(syllabusResponses);
-
-    if (!syllabusResponses.payload.length == 0) {
+    if (syllabusResponses.payload.length) {
       setSyllabus(syllabusResponses.payload);
     } else {
       toast.warning("Subject not found for this class");
@@ -51,12 +50,12 @@ function AddResult() {
     // Fetch students by classroom
     const studentResponses = await dispatch(
       studentListByClass({
-        class_no: classroom.class_no,
-        section: classroom.section,
+        class_no: classroom.classroom.class_no,
+        section: classroom.classroom.section,
       })
     );
 
-    if (!studentResponses.payload.length == 0) {
+    if (studentResponses.payload.length) {
       setStudents(studentResponses.payload);
     } else {
       toast.warning("Student not found", {
@@ -66,9 +65,18 @@ function AddResult() {
   };
 
   useEffect(() => {
-    dispatch(classRoomList());
+    const fetchClassroom = async () => {
+      const response = await dispatch(classByTeacher());
+      if (response.payload) {
+        setClassrooms(response.payload.data);
+      }
+    };
+    fetchClassroom();
+  }, [dispatch]);
+
+  useEffect(() => {
     dispatch(examTypeList());
-    dispatch(fetchSyllabus())
+    dispatch(fetchSyllabus());
   }, [dispatch]);
 
   useEffect(() => {
@@ -105,11 +113,9 @@ function AddResult() {
         toast.error(
           "Error saving the result. Result already added to the student for this subject"
         );
-        console.error(response);
       } else {
         toast.success("Result added successfully");
-        console.log("Result added successfully");
-        setSelectedClassroom([]);
+        setSelectedClassroom(null);
         setStudents([]);
         setFormData({
           student: "",
@@ -144,13 +150,13 @@ function AddResult() {
                       id="classroom"
                       name="classroom"
                       onChange={handleClassChange}
-                      value={selectedClassroom ? selectedClassroom.id : ""}
+                      value={selectedClassroom ? selectedClassroom.classroom.id : ""}
                       required
                     >
                       <option value="">-------------</option>
                       {classrooms?.map((classroom) => (
-                        <option key={classroom.id} value={classroom.id}>
-                          {classroom.class_no} {classroom.section}
+                        <option key={classroom.id} value={classroom.classroom.id}>
+                          {classroom.classroom.class_no} {classroom.classroom.section}
                         </option>
                       ))}
                     </select>
@@ -193,25 +199,25 @@ function AddResult() {
                         </select>
                       </div>
                       <div className="w-full xl:w-1/2">
-                        <label className="mb-2.5 block text-black dark:text-white">
-                          Exam Type
-                        </label>
-                        <select
-                          className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                          id="exam_type"
-                          name="exam_type"
-                          value={formData.exam_type}
-                          onChange={handleChange}
-                          required
-                        >
-                          <option value="">-------------</option>
-                          {exam_type_list?.map((exam) => (
-                            <option key={exam.id} value={exam.id}>
-                              {exam.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+<label className="mb-2.5 block text-black dark:text-white">
+  Exam Type
+</label>
+<select
+  className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+  id="exam_type"
+  name="exam_type"
+  value={formData.exam_type}
+  onChange={handleChange}
+  required
+>
+  <option value="">-------------</option>
+  {exam_type_list?.map((exam) => (
+    <option key={exam.id} value={exam.id}>
+      {exam.name}
+    </option>
+  ))}
+</select>
+</div>
                       <div className="w-full xl:w-1/2">
                         <label className="mb-2.5 block text-black dark:text-white">
                           Subject
@@ -240,12 +246,12 @@ function AddResult() {
                         </label>
                         <input
                           type="text"
-                          placeholder="Enter Assignment Mark"
-                          className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                          placeholder="Enter assignment marks"
                           name="assignment_mark"
                           value={formData.assignment_mark}
                           onChange={handleChange}
                           required
+                          className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         />
                       </div>
                       <div className="w-full xl:w-1/2">
@@ -254,20 +260,20 @@ function AddResult() {
                         </label>
                         <input
                           type="text"
-                          placeholder="Enter Exam Mark"
-                          className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                          placeholder="Enter exam marks"
                           name="exam_mark"
                           value={formData.exam_mark}
                           onChange={handleChange}
                           required
+                          className="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                         />
                       </div>
                     </div>
                     <button
+                      className="flex justify-center rounded bg-primary py-2 px-4 text-center font-medium text-white hover:bg-opacity-70 lg:px-5 xl:px-5"
                       type="submit"
-                      className="flex m-4 justify-center rounded bg-slate-700 p-3 font-medium text-gray hover:bg-opacity-90"
                     >
-                      Add Result
+                      Submit
                     </button>
                   </div>
                 )}

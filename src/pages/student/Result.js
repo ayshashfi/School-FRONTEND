@@ -3,21 +3,24 @@ import { getResult } from '../../axios/student/StudentServers';
 import { useSelector } from 'react-redux';
 import Loader from '../../Loader/Loader';
 
-
 function Result() {
-  const { user } = useSelector(store => store.auth);
+  const { user } = useSelector(store => store.auth); // Get the logged-in user
   const [resultsByExamType, setResultsByExamType] = useState({});
   const [selectedExamType, setSelectedExamType] = useState('');
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await getResult(user.id);
+        const response = await getResult(user.id); // Fetch results for logged-in student
         console.log(response);
 
         if (!response.error) {
-          const groupedResults = response.reduce((acc, result) => {
+          // Filter results to include only those for the logged-in student
+          const filteredResults = response.filter(result => result.student.id === user.id);
+
+          // Group results by exam type
+          const groupedResults = filteredResults.reduce((acc, result) => {
             const examType = result.exam_type.name;
             if (!acc[examType]) {
               acc[examType] = [];
@@ -27,6 +30,8 @@ function Result() {
           }, {});
 
           setResultsByExamType(groupedResults);
+
+          // Automatically select the first exam type if results are available
           if (Object.keys(groupedResults).length > 0) {
             setSelectedExamType(Object.keys(groupedResults)[0]);
           }
