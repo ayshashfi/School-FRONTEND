@@ -22,11 +22,17 @@ const ViewAttendance = () => {
     const fetchClassroom = async () => {
       const response = await dispatch(classByTeacher());
       if (response.payload) {
-        setClassrooms(response.payload.data); // Ensure data structure is correct
+        const uniqueClassrooms = response.payload.data.filter((value, index, self) =>
+          index === self.findIndex((c) => (
+            c.classroom.class_no === value.classroom.class_no && c.classroom.section === value.classroom.section
+          ))
+        );
+        setClassrooms(uniqueClassrooms);
       }
     };
     fetchClassroom();
   }, [dispatch]);
+  
 
   useEffect(() => {
     flatpickr(datepickerRef.current, {
